@@ -2,12 +2,12 @@
 ## EECS 348 term project
 
 ### Contributors:
-Tate Meyer: Project Manager/Programmer
-Avery Richardson: Test Engineer/Programmer
-Nikki Sotoodi: Test Engineer
-Maddi Clark: Documentation Manager
-Ayushma Koirala: Documentation Manager
-Jaycob Campos: Software Architect/Designer
+- Tate Meyer: Project Manager/Programmer
+- Avery Richardson: Test Engineer/Programmer
+- Nikki Sotoodi: Test Engineer
+- Maddi Clark: Documentation Manager
+- Ayushma Koirala: Documentation Manager
+- Jaycob Campos: Software Architect/Designer
 
 ### Documentation Guide:
 All documentation will be found inside the docs folder. This includes:
