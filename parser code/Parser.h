@@ -18,6 +18,7 @@ public:
 private:
     int lowestPrecedenceOperator(int start, int end);
     Node* buildSubTree(int start, int end);
+    ErrorHandler& ErrorHandler;
 
 };
 
