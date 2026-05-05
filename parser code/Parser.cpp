@@ -37,5 +37,23 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
 Node* Parser::buildSubTree(int start, int end) {
     if (start > end) return nullptr; //preventing overflow
 
-    if (start == )
+    //single number case
+    if (start == end && tokens[start].type == NUMBER){
+        return new Node(tokens[start]);
+    }
+
+    //parentheses case
+    if (tokens[start].type == PARENTHESIS && tokens[start].value == "(" && tokens[end] == ')') {
+        return buildSubTree(start + 1, end - 1);
+    }
+
+    int operatorIndex = lowestPrecedenceOperator(start, end);
+
+    if (operatorIndex == -1) return nullptr; //error for invalid expression
+
+    Node* node = new Node(tokens[operatorIndex]);
+    node -> left = buildSubTree(start, operatorIndex - 1);
+    node -> right = buildSubTree(operatorIndex + 1, end);
+
+    return node;
 }
