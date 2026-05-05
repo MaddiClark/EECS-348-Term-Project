@@ -21,8 +21,5 @@ private:
 
 };
 
-void Parser::createTree() {
-    std::cout << "This creates trees." << std::endl;
-}
 
 #endif //PARSER_PARSER_H
