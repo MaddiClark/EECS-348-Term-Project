@@ -1,6 +1,6 @@
 //
 // Created by Jaycob Campos on 4/17/26.
-//
+// Last edited by: Maddi Clark on 5/5/26
 
 #ifndef PARSER_PARSER_H
 #define PARSER_PARSER_H
@@ -21,5 +21,8 @@ private:
 
 };
 
+void Parser::createTree() {
+    std::cout << "This creates trees." << std::endl;
+}
 
 #endif //PARSER_PARSER_H
