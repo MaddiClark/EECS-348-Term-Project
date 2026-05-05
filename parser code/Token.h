@@ -1,5 +1,6 @@
 //
 // Created by Jaycob Campos on 4/17/26.
+// Updated by Tate Meyer on 5/5/26.
 //
 
 #ifndef PARSER_TOKEN_H
