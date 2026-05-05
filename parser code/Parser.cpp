@@ -35,5 +35,7 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
 }
 
 Node* Parser::buildSubTree(int start, int end) {
+    if (start > end) return nullptr; //preventing overflow
 
+    if (start == )
 }
