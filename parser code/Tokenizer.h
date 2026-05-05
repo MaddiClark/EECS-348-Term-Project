@@ -18,6 +18,7 @@ private:
     string inputString;
     int position = 0;
 
+    void skipSpaces();
     Token readingNumbers();
     Token readingOperators();
     bool isWhiteSpace();
