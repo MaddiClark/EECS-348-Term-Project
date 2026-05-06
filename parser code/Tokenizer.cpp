@@ -1,6 +1,7 @@
 //
 // Created by Jaycob Campos on 4/17/26.
 // Updated by Tate Meyer on 5/5/26.
+// Updated by Tate Meyer on 5/6/26. Added missing operator checks for '**' & '%'
 //
 #include "Tokenizer.h"
 #include "ErrorHandler.h"
@@ -39,7 +40,8 @@ vector<Token> Tokenizer::createTokens(string input) {
             position++;
             tokens.emplace_back(TokenType::PARENTHESIS, 0.0, paren, 0);
         } else if (inputString[position] == '+' || inputString[position] == '-' ||
-                   inputString[position] == '*' || inputString[position] == '/') {
+                   inputString[position] == '*' || inputString[position] == '/' ||
+                   inputString[position] == '%') {
             tokens.push_back(readingOperators());
         } else {
             // Everything else is a lexical error for this grammar.
@@ -110,10 +112,18 @@ Token Tokenizer::readingOperators() {
 
     const char c = inputString[position++];
     string op(1, c);
+
+    //Handles exp, returns the precedence level seperately from the precedence check below
+    if (c == '*' && position < n && inputString[position] == '*') {
+        position++;
+        op = "**";
+        return Token(TokenType::OPERATOR, 0.0, op, 3); //exp is precedent lvl 3
+    }
+
     int prec = 0;
     if (c == '+' || c == '-') {
         prec = 1;
-    } else if (c == '*' || c == '/') {
+    } else if (c == '*' || c == '/' || c == '%') {
         prec = 2;
     }
     return Token(TokenType::OPERATOR, 0.0, op, prec);
@@ -127,6 +137,7 @@ bool Tokenizer::isWhiteSpace() {
 }
 
 bool Tokenizer::isValidCharacter() {
+    // '**' is a valid character, but does not need to be checked here because '*' is already checked
     if (position < 0 || position >= static_cast<int>(inputString.size())) {
         return false;
     }
@@ -141,7 +152,7 @@ bool Tokenizer::isValidCharacter() {
     if (c == '.') {
         return true;
     }
-    if (c == '+' || c == '-' || c == '*' || c == '/') {
+    if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%') {
         return true;
     }
     if (c == '(' || c == ')') {
