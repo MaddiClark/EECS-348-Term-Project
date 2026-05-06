@@ -40,7 +40,7 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
     int parenDepth = 0;
 
     for (int i = start; i <= end; i++) {
-        Token t = tokens[i]; //creates a copy of the token for use
+        Token& t = tokens[i]; //creates a copy of the token for use
 
         if (t.type == PARENTHESIS){
             if (t.value == "(") parenDepth++;
@@ -48,9 +48,17 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
         }
 
         else if (t.type == OPERATOR && parenDepth == 0) {
+            bool isExponent = (t.value == "**");
+
             if (t.precedence <= minPrecedence) {
                 minPrecedence = t.precedence;
                 index = i;
+            }
+
+            else if (t.precedence == minPrecedence) {
+                if (!isExponent) {
+                    index = i;
+                }
             }
         }
     }
@@ -73,7 +81,7 @@ Node* Parser::buildSubTree(int start, int end) {
     }
 
     //parentheses case, safely strips parenthesis and creates a new subtree with the contents
-    if (tokens[start].type == PARENTHESIS && tokens[start].value == "(") {
+    if (tokens[start].type == PARENTHESIS && tokens[start].value == '(') {
         int depth = 0;
         bool wraps = true;
 
@@ -82,12 +90,26 @@ Node* Parser::buildSubTree(int start, int end) {
             else if (tokens[i].value == ')') depth--;
 
             if (depth == 0 && i < end) {
-                wraps == false;
+                wraps = false;
                 break;
             }
         }
         if (wraps) {
             return buildSubTree(start + 1, end - 1);
+        }
+    }
+
+    if (tokens[start].type == OPERATOR && tokens[start].value == "-") {
+        if (start == 0 || tokens[start-1].type == OPERATOR || (tokens[start-1].type == PARENTHESIS && tokens[start-1].value == '(')) {
+            Node* zeroNode = new Node(Token(NUMBER, 0)); //treats condition as 0-expression
+
+            Node* right = buildSubTree(start+1, end);
+            if (!right) return nullptr;
+
+            Node* node = new Node(tokens[start]);
+            node -> left = zeroNode;
+            node -> right = right;
+            return node;
         }
     }
 
@@ -99,10 +121,11 @@ Node* Parser::buildSubTree(int start, int end) {
     }
 
     Node* node = new Node(tokens[operatorIndex]);
-    Node* left = buildSubTree(start, opIndex - 1);
+
+    Node* left = buildSubTree(start, operatorIndex - 1);
     if (!left) return nullptr; //checks if in correct subtree
 
-    Node* right = buildSubTree(opIndex + 1, end);
+    Node* right = buildSubTree(operatorIndex + 1, end);
     if (!right) return nullptr; //checks if in correct subtree
 
     return node;
