@@ -43,8 +43,8 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
         Token& t = tokens[i]; //creates a copy of the token for use
 
         if (t.type == PARENTHESIS){
-            if (t.value == "(") parenDepth++;
-            else if (t.value == ")") parenDepth--;
+            if (t.value == '(') parenDepth++;
+            else if (t.value == ')') parenDepth--;
         }
 
         else if (t.type == OPERATOR && parenDepth == 0) {
@@ -113,10 +113,16 @@ Node* Parser::buildSubTree(int start, int end) {
         }
     }
 
+    if (tokens[start].type == OPERATOR && tokens[start].value == '+') {
+        if (start == 0 || tokens[start-1].type == OPERATOR || (tokens[start-1].type == PARENTHESIS && tokens[start-1].value == '(')) {
+            return buildSubTree(start + 1, end);
+        }
+    }
+
     int operatorIndex = lowestPrecedenceOperator(start, end);
 
     if (operatorIndex == -1) { //checks for a missing operator
-        ErrorHandler.handler(MISSING_OPERATOR; "", start, expression);
+        ErrorHandler.handler(MISSING_OPERATOR, "", start, expression);
         return nullptr;
     }
 
