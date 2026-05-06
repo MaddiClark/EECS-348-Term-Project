@@ -58,25 +58,52 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
 }
 
 Node* Parser::buildSubTree(int start, int end) {
-    if (start > end) return nullptr; //preventing overflow
+    if (start > end) { //preventing overflow
+        ErrorHandler.handler(MISSING_OPERAND, "", start, expression);
+        return nullptr; 
+    }
 
     //single number case
     if (start == end && tokens[start].type == NUMBER){
+        if (tokens[start].type != NUMBER){
+            ErrorHandler.handler(MISSING_OPERAND, "", start, expression);
+            return nullptr;
+        }
         return new Node(tokens[start]);
     }
 
-    //parentheses case
-    if (tokens[start].type == PARENTHESIS && tokens[start].value == "(" && tokens[end] == ')') {
-        return buildSubTree(start + 1, end - 1);
+    //parentheses case, safely strips parenthesis and creates a new subtree with the contents
+    if (tokens[start].type == PARENTHESIS && tokens[start].value == "(") {
+        int depth = 0;
+        bool wraps = true;
+
+        for (int i = start; i <= end; i++) {
+            if (tokens[i].value == '(') depth++;
+            else if (tokens[i].value == ')') depth--;
+
+            if (depth == 0 && i < end) {
+                wraps == false;
+                break;
+            }
+        }
+        if (wraps) {
+            return buildSubTree(start + 1, end - 1);
+        }
     }
 
     int operatorIndex = lowestPrecedenceOperator(start, end);
 
-    if (operatorIndex == -1) return nullptr; //error for invalid expression
+    if (operatorIndex == -1) { //checks for a missing operator
+        ErrorHandler.handler(MISSING_OPERATOR; "", start, expression);
+        return nullptr;
+    }
 
     Node* node = new Node(tokens[operatorIndex]);
-    node -> left = buildSubTree(start, operatorIndex - 1);
-    node -> right = buildSubTree(operatorIndex + 1, end);
+    Node* left = buildSubTree(start, opIndex - 1);
+    if (!left) return nullptr; //checks if in correct subtree
+
+    Node* right = buildSubTree(opIndex + 1, end);
+    if (!right) return nullptr; //checks if in correct subtree
 
     return node;
 }
