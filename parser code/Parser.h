@@ -6,6 +6,7 @@
 #define PARSER_PARSER_H
 #include "Token.h"
 #include "Node.h"
+#include "ErrorHandler.h"
 #include <vector>
 
 class Parser {
