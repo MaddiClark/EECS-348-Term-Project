@@ -62,7 +62,7 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
             }
         }
     }
-    
+    return index;
 }
 
 Node* Parser::buildSubTree(int start, int end) {
