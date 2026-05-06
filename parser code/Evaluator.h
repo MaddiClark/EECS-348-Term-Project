@@ -8,6 +8,7 @@
 
 class Evaluator {
 public:
+    string expression;
     double evaluate(Node *root);
 
 private:
