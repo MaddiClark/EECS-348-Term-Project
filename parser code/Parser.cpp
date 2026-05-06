@@ -8,6 +8,29 @@
 
 Node* Parser::createTree() {
     if (tokens.empty()) return nullptr;
+
+    int balance = 0;
+
+    //checks for parenthesis errors
+    for (int i = 0; i < tokens.size(); i++) {
+        Token& t = tokens [i];
+        if (t.type == PARENTHESIS) {
+            if (t.value == '(') balance++;
+            else if (t.value == ')') balance--;
+
+            if (balance < 0) { //checking for any extra parenthesis
+                ErrorHandler.handler(MISMATCHED_PARENTHESES, "extra )", i, expression);
+                return nullptr;
+            }
+        }
+    }
+
+    if (balance != 0) { //checking for any missing parenthesis
+        ErrorHandler.handler(UNMATCHED_PARENTHESES, "(", -1, expression);
+        return nullptr;
+    }
+    //end of checking parenthesis errors
+
     return buildSubTree(0, tokens.size() - 1);
 }
 
