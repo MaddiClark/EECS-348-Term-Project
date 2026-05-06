@@ -1,91 +1,103 @@
 //
-
 // Created by Jaycob Campos on 4/17/26.
-
 // Updated by Nikki Sotoodi on 5/6/26.
-
 //
 
- 
-
 #include "Evaluator.h"
+#include "ErrorHandler.h"
+#include <cmath>
 
-#include <stdexcept>
-
- 
 
 double Evaluator::evaluate(Node *root) {
 
-    if (root == nullptr) {
+    ErrorHandler obj;
 
-        throw runtime_error("Invalid expression");
+    if (root == nullptr) {
 
-    }
+        obj.handler(MISSING_OPERAND, "", -1, expression);
+        return 0;
 
- 
+    }
 
-    if (root->token.type == NUMBER) {
+    if (root->token.type == NUMBER) {
 
-        return root->token.number;
+        return root->token.number;
 
-    }
+    }
 
- 
 
-    if (root->token.type == OPERATOR) {
+    if (root->token.type == OPERATOR) {
 
-        double left = evaluate(root->left);
+        double left = evaluate(root->left);
 
-        double right = evaluate(root->right);
+        double right = evaluate(root->right);
 
- 
+        return applyOperator(root->token.operatorValue, left, right);
 
-        return applyOperator(root->token.operatorValue, left, right);
+    }
 
-    }
 
- 
-
-    throw runtime_error("Invalid expression");
+    obj.handler(MISSING_OPERAND, "", -1, expression);
+    return 0;
 
 }
 
- 
-
 double Evaluator::applyOperator(string operatorValue, double left, double right) {
 
-    if (operatorValue == "+") {
+    ErrorHandler obj;
 
-        return left + right;
+    if (operatorValue == "+") {
 
-    }
+        return left + right;
 
-    else if (operatorValue == "-") {
+    }
 
-        return left - right;
+    else if (operatorValue == "-") {
 
-    }
+        return left - right;
 
-    else if (operatorValue == "*") {
+    }
 
-        return left * right;
+    else if (operatorValue == "*") {
 
-    }
+        return left * right;
 
-    else if (operatorValue == "/") {
+    }
 
-        if (right == 0) {
+    else if (operatorValue == "/") {
 
-            throw runtime_error("Division by zero");
+        if (right == 0) {
 
-        }
+            obj.handler(DIVISION_BY_ZERO, operatorValue, -1, expression);
+            return 0;
 
-        return left / right;
+        }
 
-    }
+        return left / right;
 
- 
+    }
 
-    throw runtime_error("Unknown operator");
+    else if (operatorValue == "%") {
+
+        if (right == 0) {
+
+            obj.handler(DIVISION_BY_ZERO, operatorValue, -1, expression);
+            return 0;
+
+        }
+
+        return (int)left % (int)right;
+
+    }
+
+    else if (operatorValue == "**") {
+
+        return pow(left, right);
+
+    }
+
+
+    obj.handler(UNSUPPORTED_OPERATOR, operatorValue, -1, expression);
+    return 0;
 
 }
