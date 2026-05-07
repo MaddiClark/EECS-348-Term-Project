@@ -4,6 +4,7 @@
 // Changelog: added lightweight global error tracking if tokenizing/parsing/eval
 //            reports an error, the UI does not print the result. 
 //            case: 2/(3-3) prints "Error: Division by zero" instead of "=0"
+//            added MALFORMED_NUMBER error code and message primarily for multi-decimal ie. 1.2.5
 #include <iostream>
 #include "ErrorHandler.h"
 
@@ -28,6 +29,7 @@ void ErrorHandler::handler(ErrorCodes error, string cause, int position, string 
     if (error == DIVISION_BY_ZERO) cout << "Division by zero";
     if (error == MISSING_OPERATOR) cout << "Missing operator";
     if (error == UNMATCHED_PARENTHESES) cout << "Unmatched parentheses";
+    if (error == MALFORMED_NUMBER) cout << "Malformed number";
 
     if (position == -1) {
         cout << endl;
