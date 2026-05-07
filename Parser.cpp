@@ -7,7 +7,7 @@
 //
 // Debugged and edited by Tate Meyer 5/7/26.
 // improved unary handling (split section and subtree handling) 
-// Unary now works after operators and inside subexpressions: 2--3 = 5, 2*-3 = -6, 2**-3 = 0.125, -2**2 = -4
+// Unary now works after operators inside subexpressions, and at the start of expressions: 2--3 = 5, 2*-3 = -6, 2**-3 = 0.125, -2**2 = -4
 
 #include "Parser.h"
 #include "ErrorHandler.h"
@@ -119,20 +119,24 @@ Node* Parser::buildSubTree(int start, int end) {
         }
     }
 
-    // Handle unary + / - at the start of this range (e.g., "-3", "2*-3", "(-2)").
-    if (tokens[start].type == OPERATOR &&
-        (tokens[start].operatorValue == "-" || tokens[start].operatorValue == "+")) {
+    int operatorIndex = lowestPrecedenceOperator(start, end);
+
+    // If this range begins with a unary +/- and the only split point at this level is exponentiation,
+    // unary should apply to the entire exponent expression: -2**2 == -(2**2).
+    if (operatorIndex != -1 &&
+        tokens[start].type == OPERATOR &&
+        (tokens[start].operatorValue == "-" || tokens[start].operatorValue == "+") &&
+        tokens[operatorIndex].type == OPERATOR &&
+        tokens[operatorIndex].operatorValue == "**") {
         const bool canBeUnary =
             (start == 0 ||
              tokens[start - 1].type == OPERATOR ||
              (tokens[start - 1].type == PARENTHESIS && tokens[start - 1].operatorValue == "("));
-
         if (canBeUnary) {
             if (tokens[start].operatorValue == "+") {
                 return buildSubTree(start + 1, end);
             }
-
-            Node* zeroNode = new Node(Token()); // treat as 0 - expr
+            Node* zeroNode = new Node(Token()); // treat as 0 - (exponent expression)
             Node* right = buildSubTree(start + 1, end);
             if (!right) { delete zeroNode; return nullptr; }
 
@@ -143,9 +147,33 @@ Node* Parser::buildSubTree(int start, int end) {
         }
     }
 
-    int operatorIndex = lowestPrecedenceOperator(start, end);
+    if (operatorIndex == -1) {
+        // Handle unary + / - at the start of this range (e.g., "-3", "2*-3", "(-2)").
+        // Only do this when there is no binary operator to split on in this range.
+        if (tokens[start].type == OPERATOR &&
+            (tokens[start].operatorValue == "-" || tokens[start].operatorValue == "+")) {
+            const bool canBeUnary =
+                (start == 0 ||
+                 tokens[start - 1].type == OPERATOR ||
+                 (tokens[start - 1].type == PARENTHESIS && tokens[start - 1].operatorValue == "("));
 
-    if (operatorIndex == -1) { //checks for a missing operator
+            if (canBeUnary) {
+                if (tokens[start].operatorValue == "+") {
+                    return buildSubTree(start + 1, end);
+                }
+
+                Node* zeroNode = new Node(Token()); // treat as 0 - expr
+                Node* right = buildSubTree(start + 1, end);
+                if (!right) { delete zeroNode; return nullptr; }
+
+                Node* node = new Node(tokens[start]);
+                node->left = zeroNode;
+                node->right = right;
+                return node;
+            }
+        }
+
+        //checks for a missing operator
         errorHandler.handler(MISSING_OPERATOR, "", start, expression);
         return nullptr;
     }
