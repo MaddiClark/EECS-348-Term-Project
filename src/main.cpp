@@ -5,6 +5,7 @@ void evaluate(string equation) {
     Parser parser;
     Evaluator evaluator;
 
+    ErrorHandler::reset();
     vector<Token> tokens = Tokenizer().createTokens(equation);
     if (tokens.empty()) {
         return;
@@ -18,7 +19,10 @@ void evaluate(string equation) {
 
     if (parent != nullptr) {
         double result = evaluator.evaluate(parent);
-        cout << equation + "    =   " << result << endl;
+        // only print result if no errors occurred
+        if (!ErrorHandler::hadError()) {
+            cout << equation + "    =   " << result << endl;
+        }
         delete parent;
     }
 }

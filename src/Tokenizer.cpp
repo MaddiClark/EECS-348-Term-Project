@@ -3,7 +3,8 @@
 // Updated by Tate Meyer on 5/5/26.
 // Updated by Tate Meyer on 5/6/26. Added missing operator checks for '**' & '%'
 // Updated to support scientific notation in number literals (e.g. 1e2, 2.5E-3).
-//
+// Debugged on 5/7/26 by Tate Meyer.
+// Changelog: added MALFORMED_NUMBER to the error handler for multi-decimal ie. 1.2.5
 #include "Tokenizer.h"
 #include "ErrorHandler.h"
 
@@ -28,10 +29,20 @@ vector<Token> Tokenizer::createTokens(string input) {
         // Allows "0.5" and ".5"; "." alone is rejected (fraction needs at least one digit).
         if (std::isdigit(uc)) {
             tokens.push_back(readingNumbers());
+            if (position < length && inputString[position] == '.') {
+                // e.g. "1.2.3": readingNumbers consumed "1.2", leaving the second '.' here.
+                errorHandler.handler(MALFORMED_NUMBER, "second decimal point", position, inputString);
+                return {};
+            }
         } else if (inputString[position] == '.') {
             if (position + 1 < length &&
                 std::isdigit(static_cast<unsigned char>(inputString[position + 1]))) {
                 tokens.push_back(readingNumbers());
+                if (position < length && inputString[position] == '.') {
+                    // e.g. ".5.6": readingNumbers consumed ".5", leaving the second '.' here.
+                    errorHandler.handler(MALFORMED_NUMBER, "second decimal point", position, inputString);
+                    return {};
+                }
             } else {
                 errorHandler.handler(INVALID_CHARACTER, ".", position, inputString);
                 return {};

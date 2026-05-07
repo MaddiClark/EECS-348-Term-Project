@@ -1,7 +1,11 @@
 //
 // Created by Jaycob Campos on 4/17/26.
 // Updated by Nikki Sotoodi on 5/6/26.
+// Debugged by Avery Richardson on 5/6/26
+// ChangeLog: Added Line 33-36, Added a NULL check block to ensure a crash does not occur
 //
+// Debugged and edited by Tate Meyer 5/7/26. 
+// ChangeLog: changed applyOperator to use fmod for modulo instead of % to handle decimal cases: 5.5%2 = 1.5
 
 #include "Evaluator.h"
 #include "ErrorHandler.h"
@@ -27,6 +31,11 @@ double Evaluator::evaluate(Node *root) {
 
 
     if (root->token.type == OPERATOR) {
+
+        if (root->left == nullptr || root->right == nullptr) {
+            obj.handler(MISSING_OPERAND, root->token.operatorValue, -1, expression);
+            return 0;
+        }
 
         double left = evaluate(root->left);
 
@@ -86,7 +95,7 @@ double Evaluator::applyOperator(string operatorValue, double left, double right)
 
         }
 
-        return (int)left % (int)right;
+        return std::fmod(left, right);
 
     }
 
