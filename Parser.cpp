@@ -4,7 +4,10 @@
 // Debugged by Avery Richardson 5/6/26.
 // Change Log: Line 139: Changed line to delete left before nullptr to prevent any memory leaks
 // Line 79: Changed to just if(start == end) to make sure the inner cond runs.
-// Is it optimized? God no lol
+//
+// Debugged and edited by Tate Meyer 5/7/26.
+// improved unary handling (split section and subtree handling) 
+// Unary now works after operators and inside subexpressions: 2--3 = 5, 2*-3 = -6, 2**-3 = 0.125, -2**2 = -4
 
 #include "Parser.h"
 #include "ErrorHandler.h"
@@ -54,6 +57,19 @@ int Parser::lowestPrecedenceOperator(int start, int end) {
         }
 
         else if (t.type == OPERATOR && parenDepth == 0) {
+            // Treat leading + / - as unary operators, not binary split points.
+            // If we split on a unary operator (e.g. in "2*-3"), the left subtree becomes invalid ("2*").
+            if ((t.operatorValue == "+" || t.operatorValue == "-")) {
+                const bool atStart = (i == start);
+                const bool precededByOp =
+                    (!atStart &&
+                     (tokens[i - 1].type == OPERATOR ||
+                      (tokens[i - 1].type == PARENTHESIS && tokens[i - 1].operatorValue == "(")));
+                if (atStart || precededByOp) {
+                    continue;
+                }
+            }
+
             bool isExponent = (t.operatorValue == "**");
 
             if (t.precedence < minPrecedence) {
@@ -103,19 +119,21 @@ Node* Parser::buildSubTree(int start, int end) {
         }
     }
 
-    int operatorIndex = lowestPrecedenceOperator(start, end);
+    // Handle unary + / - at the start of this range (e.g., "-3", "2*-3", "(-2)").
+    if (tokens[start].type == OPERATOR &&
+        (tokens[start].operatorValue == "-" || tokens[start].operatorValue == "+")) {
+        const bool canBeUnary =
+            (start == 0 ||
+             tokens[start - 1].type == OPERATOR ||
+             (tokens[start - 1].type == PARENTHESIS && tokens[start - 1].operatorValue == "("));
 
-    if (operatorIndex == -1) { //checks for a missing operator
-        errorHandler.handler(MISSING_OPERATOR, "", start, expression);
-        return nullptr;
-    }
+        if (canBeUnary) {
+            if (tokens[start].operatorValue == "+") {
+                return buildSubTree(start + 1, end);
+            }
 
-    // unary minus: only when the split point IS the '-' at the start of the range
-    if (operatorIndex == start && tokens[start].operatorValue == "-") {
-        if (start == 0 || tokens[start-1].type == OPERATOR || (tokens[start-1].type == PARENTHESIS && tokens[start-1].operatorValue == "(")) {
-            Node* zeroNode = new Node(Token()); //treats condition as 0-expression
-
-            Node* right = buildSubTree(start+1, end);
+            Node* zeroNode = new Node(Token()); // treat as 0 - expr
+            Node* right = buildSubTree(start + 1, end);
             if (!right) { delete zeroNode; return nullptr; }
 
             Node* node = new Node(tokens[start]);
@@ -125,11 +143,11 @@ Node* Parser::buildSubTree(int start, int end) {
         }
     }
 
-    // unary plus: same gating as unary minus, but no zero node needed since +x = x
-    if (operatorIndex == start && tokens[start].operatorValue == "+") {
-        if (start == 0 || tokens[start-1].type == OPERATOR || (tokens[start-1].type == PARENTHESIS && tokens[start-1].operatorValue == "(")) {
-            return buildSubTree(start+1, end);
-        }
+    int operatorIndex = lowestPrecedenceOperator(start, end);
+
+    if (operatorIndex == -1) { //checks for a missing operator
+        errorHandler.handler(MISSING_OPERATOR, "", start, expression);
+        return nullptr;
     }
 
     Node* node = new Node(tokens[operatorIndex]);
